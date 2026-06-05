@@ -1,24 +1,20 @@
 from pyspark.sql.functions import col
 
-def clean_orders(orders):
-    return orders.dropna(subset=["customer_id", "product_id"])
+def build_gold(customers, products, orders, payments):
 
-
-def build_sales(customers, products, orders, payments):
-
-    # 1. clean
-    orders_clean = clean_orders(orders)
-
-    # 2. join
-    sales = orders_clean \
+    sales = orders \
         .join(customers, "customer_id", "left") \
         .join(products, "product_id", "left") \
         .join(payments, "order_id", "left")
 
-    # 3. enrichissement
     sales = sales.withColumn(
         "total_amount",
         col("quantity") * col("price")
+    )
+
+    sales = sales.withColumn(
+        "is_high_value",
+        col("total_amount") > 200
     )
 
     return sales

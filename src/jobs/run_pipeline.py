@@ -1,26 +1,26 @@
-from src.ingestion.load import (
-    create_spark,
-    load_customers,
-    load_products,
-    load_orders,
-    load_payments
-)
-
-
-from src.transformations.transform import build_sales
+from src.ingestion.bronze import create_spark, load_bronze
+from src.transformations.silver import build_silver
+from src.transformations.gold import build_gold
 
 def run_pipeline():
 
+    # 1. Spark session
     spark = create_spark()
 
-    
-    customers = load_customers(spark)
-    products = load_products(spark)
-    orders = load_orders(spark)
-    payments = load_payments(spark)
+    # 2. BRONZE
+    customers, products, orders, payments = load_bronze(spark)
 
-    sales = build_sales(customers, products, orders, payments)
+    # 3. SILVER
+    customers_s, products_s, orders_s, payments_s = build_silver(
+        customers, products, orders, payments
+    )
 
+    # 4. GOLD
+    sales = build_gold(
+        customers_s, products_s, orders_s, payments_s
+    )
+
+    # 5. OUTPUT
     sales.write.mode("overwrite").parquet("output/gold/sales")
 
     print("Pipeline finished successfully")
