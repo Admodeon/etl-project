@@ -2,6 +2,9 @@ from faker import Faker
 import pandas as pd
 import random
 import numpy as np
+import requests
+
+api_users = requests.get("https://jsonplaceholder.typicode.com/users").json()
 
 fake = Faker("fr_FR")
 
@@ -16,11 +19,14 @@ NB_ORDERS = 100000
 customers = []
 
 for i in range(1, NB_CUSTOMERS + 1):
+
+    api_user = random.choice(api_users)
+
     customers.append({
         "customer_id": i,
-        "first_name": fake.first_name(),
-        "last_name": fake.last_name(),
-        "city": fake.city(),
+        "first_name": api_user["name"].split()[0],
+        "last_name": api_user["name"].split()[-1] if len(api_user["name"].split()) > 1 else "",
+        "city": api_user["address"]["city"],
         "country": "France",
         "signup_date": fake.date_between("-3y", "today")
     })
